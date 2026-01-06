@@ -183,7 +183,7 @@ if not filtered_df.empty:
         height=600,
         template="plotly_dark"
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width='stretch')
 
     st.caption(
         "💡 **Pro Tip:** Look for large bubbles in the top-left quadrant. These are high-performance cards at low prices.")
@@ -225,6 +225,7 @@ if not filtered_df.empty:
     st.dataframe(
         deals.style.background_gradient(subset=['Value Rating'], cmap="Greens")
         .format({f'Price ({SYMBOL})': "{:.2f}"}),
-        use_container_width=True,
+        width='stretch',
         height=500 if show_all else None  # Auto-expand height if showing all
     )
+

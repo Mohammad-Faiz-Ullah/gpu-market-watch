@@ -226,6 +226,7 @@ if not filtered_df.empty:
         deals.style.background_gradient(subset=['Value Rating'], cmap="Greens")
         .format({f'Price ({SYMBOL})': "{:.2f}"}),
         width='stretch',
-        height=500 if show_all else None  # Auto-expand height if showing all
+        height=500
     )
+
 

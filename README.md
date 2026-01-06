@@ -63,3 +63,28 @@ pip install -r requirements.txt
 *Create a .env file (for the scraper) and a .streamlit/secrets.toml file (for the dashboard) with your Supabase credentials:
 
 Inside .env:
+```Ini, TOML
+DB_HOST="your-supabase-pooler-url"
+DB_USER="postgres.your-project-id"
+DB_PASS="your-db-password"
+```
+
+Inside .streamlit/secrets.toml:
+```Ini, TOML
+[postgres]
+host = "your-supabase-pooler-url"
+port = "6543"
+dbname = "postgres"
+user = "postgres.your-project-id"
+password = "your-db-password"
+```
+
+**4. Run the Scraper (Backend)
+```bash
+python scraper.py
+```
+
+**5. Launch the Dashboard (Frontend)
+```bash
+streamlit run app.py
+```

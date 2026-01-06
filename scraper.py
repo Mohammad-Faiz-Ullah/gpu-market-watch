@@ -27,7 +27,7 @@ def get_db_connection():
         conn = psycopg2.connect(
             host=os.getenv("DB_HOST"),
             database="postgres",
-            user="postgres",
+            user="postgres.ouqlcjudexkglmxwxtkb",
             password=os.getenv("DB_PASS"),
             port="6543",
             sslmode="require"
@@ -150,6 +150,7 @@ def scrape_gpu_data():
 
 if __name__ == "__main__":
     scrape_gpu_data()
+
 
 
 

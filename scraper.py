@@ -2,38 +2,47 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 import re
+import os
+import psycopg2
 
 # ==========================================
 # 1. THE SETUP: Define Target & Headers
 # ==========================================
 
-# The URL where the data lives
 URL = "https://www.videocardbenchmark.net/gpu_list.php"
-
-# Looking like a real browser is a must, or the website will block us.
-
 HEADERS = {"User-Agent" : "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"}
 
 def clean_price(price_str):
-    # Custom function to turn '$1,299.99*' into the number 1299.99
     if "NA" in price_str or not price_str:
         return None
-    clean_str = re.sub(r'[^\d.]', '', price_str)  # Remove '$', '*', and ',' (commas break conversion)
-
+    clean_str = re.sub(r'[^\d.]', '', price_str)
     try:
         return float(clean_str)
     except ValueError:
-        return  None
+        return None
+
+def get_db_connection():
+    """Establishes connection to Supabase using Environment Variables"""
+    try:
+        conn = psycopg2.connect(
+            host=os.getenv("DB_HOST"),
+            database="postgres",
+            user="postgres",
+            password=os.getenv("@Anonymous51826132003"),
+            port="5432"
+        )
+        return conn
+    except Exception as e:
+        print(f"❌ Database Connection Failed: {e}")
+        return None
 
 def scrape_gpu_data():
     print(f"🚀 Connecting to {URL}...")
 
     # ==========================================
-    # 2. THE REQUEST: Fetch the HTML
+    # 2. THE REQUEST
     # ==========================================
-
     response = requests.get(URL, headers=HEADERS)
-
     if response.status_code != 200:
         print(f"❌ Failed to fetch page. Status code: {response.status_code}")
         return
@@ -41,79 +50,102 @@ def scrape_gpu_data():
     print("✅ Connection Successful! Parsing HTML...")
 
     # ==========================================
-    # 3. THE SOUP: Parse the HTML
+    # 3. THE SOUP
     # ==========================================
-
-    # BeautifulSoup turns the raw HTML text into a tree of objects we can search
     soup = BeautifulSoup(response.text, "html.parser")
-
-    # Find the specific table. On PassMark, the big list has id="cputable"
-
-    table = soup.find("table", {"id":"cputable"})  # FINDING ID: Right-click the table in Chrome -> Inspect
+    table = soup.find("table", {"id":"cputable"})
 
     if not table:
-        print("❌ Could not find the table. The website structure might have changed.")
+        print("❌ Could not find the table.")
         return
 
-    rows = table.find_all("tr")[1:]  # Getting all rows (<tr> tags), skipping the header row
-
+    rows = table.find_all("tr")[1:]
     gpu_data=[]
 
     # ==========================================
-    # 4. THE EXTRACTION: Loop through rows
+    # 4. THE EXTRACTION
     # ==========================================
     print(f"🔍 Found {len(rows)} GPUs. Extracting data...")
 
     for row in rows:
         cols = row.find_all("td")
-
-        # Checking if row has enough columns (Passmark has Name, Price, Mark, etc.)
         if len(cols) >= 4:
-            # Column 0: GPU Name
             gpu_name = cols[0].text.strip()
-
-            # Column 1: Passmark G3D Score (Performance)
+            
             try:
                 score = int(cols[1].text.replace(',', ''))
             except:
                 score = 0
 
-            # Looking for the column with a '$' sign
             price = None
             for col in cols:
                 text = col.text.strip()
-                if "$" in text or "*" in text:  # Price usually has $ or * (e.g., $1,299*)
+                if "$" in text or "*" in text:
                     found_price = clean_price(text)
-                    # Ensure it's not a tiny number like "1.03" (which is the Value column)
                     if found_price and found_price > 30:
                         price = found_price
                         break
 
-                        # Only add if we found a valid price & score
             if price and score > 0:
+                # Calculate Value Rating (Score per Dollar)
+                value_rating = score / price
+
                 gpu_data.append({
                     "GPU_Name": gpu_name,
                     "Benchmark_Score": score,
                     "Price_USD": price,
+                    "Value_Rating": value_rating,
                     "Manufacturer": "NVIDIA" if "GeForce" in gpu_name or "RTX" in gpu_name else "AMD" if "Radeon" in gpu_name else "Intel" if "Arc" in gpu_name else "Other"
                 })
 
     # ==========================================
-    # 5. THE LOAD: Save to CSV
+    # 5. THE CLEANUP (Pandas)
     # ==========================================
-
     df = pd.DataFrame(gpu_data)
-
-    # Filter: Let's remove "Other" brands and very weak cards to keep dataset clean
+    
+    # Keeping only major brands and decent cards
     df = df[df['Manufacturer'].isin(['NVIDIA', 'AMD', 'Intel'])]
-    df = df[df['Benchmark_Score'] > 1000]  # Remove ancient cards
+    df = df[df['Benchmark_Score'] > 1000]
 
-    output_file = "gpu_market_data.csv"
-    df.to_csv(output_file, index=False)
+    print(f"🎉 Scraped & Cleaned {len(df)} GPUs. Uploading to Supabase...")
 
-    print(f"🎉 Success! Scraped {len(df)} GPUs.")
-    print(f"💾 Data saved to '{output_file}'")
-    print(df.head())
+    # ==========================================
+    # 6. THE UPLOAD: Insert into Supabase
+    # ==========================================
+    conn = get_db_connection()
+    
+    if not conn:
+        print("❌ Upload skipped due to connection error.")
+        return
+
+    cur = conn.cursor()
+
+    # Clearing old data to get the latest prices
+    cur.execute("TRUNCATE TABLE gpu_prices;") 
+    
+    count = 0
+    for index, row in df.iterrows():
+        try:
+            cur.execute("""
+                INSERT INTO gpu_prices (gpu_name, price, benchmark_score, value_rating, manufacturer)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (
+                row['GPU_Name'], 
+                row['Price_USD'], 
+                row['Benchmark_Score'], 
+                row['Value_Rating'], 
+                row['Manufacturer']
+            ))
+            count += 1
+        except Exception as e:
+            print(f"⚠️ Error inserting {row['GPU_Name']}: {e}")
+            conn.rollback() # Skip this row and continue
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    print(f"✅ Successfully uploaded {count} rows to Supabase!")
 
 if __name__ == "__main__":
     scrape_gpu_data()

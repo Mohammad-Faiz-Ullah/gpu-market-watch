@@ -28,7 +28,7 @@ def get_db_connection():
             host=os.getenv("DB_HOST"),
             database="postgres",
             user="postgres",
-            password=os.getenv("@Anonymous51826132003"),
+            password=os.getenv("DB_PASS"),
             port="5432"
         )
         return conn
@@ -149,3 +149,4 @@ def scrape_gpu_data():
 
 if __name__ == "__main__":
     scrape_gpu_data()
+

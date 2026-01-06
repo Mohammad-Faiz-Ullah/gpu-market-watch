@@ -50,7 +50,7 @@ def load_and_clean_data():
         return pd.DataFrame() # Return empty DF if failed
 
     try:
-        df = load_data()
+        df_raw = load_data()
     except FileNotFoundError:
         st.error("❌ Unable to load data! Check the app.py file")
         st.stop()
@@ -252,6 +252,7 @@ if not filtered_df.empty:
         width='stretch',
         height=500 if show_all else "content"
     )
+
 
 
 

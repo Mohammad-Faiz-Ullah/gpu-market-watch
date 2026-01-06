@@ -10,7 +10,12 @@ import psycopg2
 # ==========================================
 
 URL = "https://www.videocardbenchmark.net/gpu_list.php"
-HEADERS = {"User-Agent" : "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"}
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Referer": "https://www.videocardbenchmark.net/"
+}
 
 def clean_price(price_str):
     if "NA" in price_str or not price_str:
@@ -27,7 +32,7 @@ def get_db_connection():
         conn = psycopg2.connect(
             host=os.getenv("DB_HOST"),
             database="postgres",
-            user="postgres.ouqlcjudexkglmxwxtkb",
+            user=os.getenv("DB_USER"),
             password=os.getenv("DB_PASS"),
             port="6543",
             sslmode="require"
@@ -150,6 +155,7 @@ def scrape_gpu_data():
 
 if __name__ == "__main__":
     scrape_gpu_data()
+
 
 
 

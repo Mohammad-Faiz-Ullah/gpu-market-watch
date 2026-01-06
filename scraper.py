@@ -29,7 +29,7 @@ def get_db_connection():
             database="postgres",
             user="postgres",
             password=os.getenv("DB_PASS"),
-            port="5432"
+            port="6543"
         )
         return conn
     except Exception as e:
@@ -149,4 +149,5 @@ def scrape_gpu_data():
 
 if __name__ == "__main__":
     scrape_gpu_data()
+
 

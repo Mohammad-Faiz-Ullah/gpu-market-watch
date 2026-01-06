@@ -28,3 +28,38 @@ This project uses an **ETL (Extract, Transform, Load)** architecture to run comp
 ├── scraper.py           # The backend script (runs on GitHub Actions)
 ├── requirements.txt     # List of dependencies
 └── README.md            # Project Documentation
+```
+
+## ✨ Key Features
+* **Deal Hunter Engine:** Automatically calculates a "Value Rating" (Performance per Dollar) to highlight hidden gems.
+* **Real-Time Filters:** Filter GPUs by **Manufacturer** (NVIDIA/AMD/Intel), **Price Range**, or **Search** by name.
+* **Market Analytics:** Displays key metrics like the absolute *Best Value Deal* and *Top Performance* card currently available.
+* **Color-Coded Heatmap:** Visualizes value ratings (Green = Good Deal, White = Average) for instant insights.
+
+## 📸 Screenshots
+
+### 1. Live Deal Hunter Dashboard
+*Real-time arbitrage tracking with key market metrics.*
+![Dashboard Header](assets/dashboard_header.png)
+
+### 2. The "Best Value" Table
+*Automatically ranked list of GPUs based on Price-to-Performance ratio.*
+![Value Table](assets/value_table.png)
+
+## 🔧 Local Installation & Setup
+Want to run this project locally? Follow these steps:
+
+**1. Clone the repository**
+```bash
+git clone [https://github.com/Mohammad-Faiz-Ullah/gpu-market-watch.git](https://github.com/Mohammad-Faiz-Ullah/gpu-market-watch.git)
+cd gpu-market-watch
+```
+**2. Install Dependencies**
+```bash
+pip install -r requirements.txt
+```
+
+**3. Configure Secrets** 
+*Create a .env file (for the scraper) and a .streamlit/secrets.toml file (for the dashboard) with your Supabase credentials:
+
+Inside .env:

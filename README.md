@@ -1,7 +1,7 @@
 # 🚀 GPU Market Watch
 
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://gpu-market-watch-pxogjqtjs6ij8kf8kjihze.streamlit.app)
 [![Daily GPU Scraper](https://github.com/Mohammad-Faiz-Ullah/gpu-market-watch/actions/workflows/daily_scraper.yml/badge.svg)](https://github.com/Mohammad-Faiz-Ullah/gpu-market-watch/actions/workflows/daily_scraper.yml)
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://gpu-market-watch-pxogjqtjs6ij8kf8kjihze.streamlit.app)
 
 A fully automated data pipeline that tracks GPU prices daily to find the best "Price-to-Performance" value cards.
 
@@ -79,12 +79,12 @@ user = "postgres.your-project-id"
 password = "your-db-password"
 ```
 
-**4. Run the Scraper (Backend)
+**4. Run the Scraper (Backend)**
 ```bash
 python scraper.py
 ```
 
-**5. Launch the Dashboard (Frontend)
+**5. Launch the Dashboard (Frontend)**
 ```bash
 streamlit run app.py
 ```

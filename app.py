@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import psycopg2
 
 # ==========================================
 # 1. PAGE CONFIGURATION
@@ -29,24 +30,47 @@ st.markdown("""
 # ==========================================
 # 2. DATA LOADING & ENGINEERING
 # ==========================================
-@st.cache_data
+@st.cache_data(ttl=600)
 def load_and_clean_data():
+    try:
+        conn = psycopg2.connect(
+            host=st.secrets["postgres"]["host"],
+            user=st.secrets["postgres"]["user"],
+            password=st.secrets["postgres"]["password"],
+            dbname=st.secrets["postgres"]["dbname"],
+            port=st.secrets["postgres"]["port"],
+            sslmode="require"
+        )
+        query = "SELECT * FROM gpu_prices"
+        df = pd.read_sql(query, conn)
+        conn.close()
+        return df
+    except Exception as e:
+        st.error(f"Error connecting to database: {e}")
+        return pd.DataFrame() # Return empty DF if failed
+
+    try:
+        df = load_data()
+    except FileNotFoundError:
+        st.error("❌ Unable to load data! Check the app.py file")
+        st.stop()
+        
     # Load the CSV you scraped
-    df = pd.read_csv("gpu_market_data.csv")
+    # df = pd.read_csv("gpu_market_data.csv")
 
     # Safety Check
-    df = df[df['Price_USD'] > 0]
+    # df = df[df['Price_USD'] > 0]
 
     # Feature Engineering (Base Metrics in USD)
-    df['Value_Score'] = df['Benchmark_Score'] / df['Price_USD']
-    return df
+    # df['Value_Score'] = df['Benchmark_Score'] / df['Price_USD']
+    # return df
 
-
-try:
-    df_raw = load_and_clean_data()
-except FileNotFoundError:
-    st.error("❌ CSV not found! Did you run scraper.py?")
-    st.stop()
+    
+    # try:
+        # df_raw = load_and_clean_data()
+    # except FileNotFoundError:
+        # st.error("❌ CSV not found! Did you run scraper.py?")
+        # st.stop()
 
 # ==========================================
 # 3. SIDEBAR CONTROLS (UX UPGRADES)
@@ -228,6 +252,7 @@ if not filtered_df.empty:
         width='stretch',
         height=500 if show_all else "content"
     )
+
 
 
 

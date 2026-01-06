@@ -4,3 +4,5 @@ plotly
 requests
 matplotlib
 beautifulsoup4
+psycopg2-binary
+os

@@ -44,34 +44,42 @@ def load_and_clean_data():
         query = "SELECT * FROM gpu_prices"
         df = pd.read_sql(query, conn)
         conn.close()
+
+        # --------------------------------------------------------
+        # CRITICAL FIX: Renaming DB columns to match App Logic
+        # Database returns: gpu_name, price, benchmark_score...
+        # App expects: GPU_Name, Price_USD, Benchmark_Score...
+        # --------------------------------------------------------
+        df = df.rename(columns={
+            "gpu_name": "GPU_Name",
+            "price": "Price_USD",
+            "benchmark_score": "Benchmark_Score",
+            "manufacturer": "Manufacturer",
+            # DB has 'value_rating', App calculates 'Value_Score' later, 
+            # but we can map it just in case.
+            "value_rating": "Value_Score_DB" 
+        })
+
+        # Ensure numeric types
+        df['Price_USD'] = pd.to_numeric(df['Price_USD'], errors='coerce')
+        df['Benchmark_Score'] = pd.to_numeric(df['Benchmark_Score'], errors='coerce')
+
         return df
+
     except Exception as e:
         st.error(f"Error connecting to database: {e}")
-        return pd.DataFrame() # Return empty DF if failed
+        return pd.DataFrame()
 
-    try:
-        df_raw = load_data()
-    except FileNotFoundError:
-        st.error("❌ Unable to load data! Check the app.py file")
-        st.stop()
-        
-    # Load the CSV you scraped
-    # df = pd.read_csv("gpu_market_data.csv")
 
-    # Safety Check
-    # df = df[df['Price_USD'] > 0]
+# Invoking function to get the data
 
-    # Feature Engineering (Base Metrics in USD)
-    # df['Value_Score'] = df['Benchmark_Score'] / df['Price_USD']
-    # return df
+df_raw = load_and_clean_data()
 
+# Safety Check: Stop if database is empty or connection failed
+if df_raw.empty:
+    st.warning("⚠️ No data loaded from Supabase. Please check your database connection.")
+    st.stop()
     
-    # try:
-        # df_raw = load_and_clean_data()
-    # except FileNotFoundError:
-        # st.error("❌ CSV not found! Did you run scraper.py?")
-        # st.stop()
-
 # ==========================================
 # 3. SIDEBAR CONTROLS (UX UPGRADES)
 # ==========================================
@@ -252,6 +260,7 @@ if not filtered_df.empty:
         width='stretch',
         height=500 if show_all else "content"
     )
+
 
 
 

@@ -90,7 +90,7 @@ currency = st.sidebar.radio("Currency", ["USD ($)", "INR (₹)"], horizontal=Tru
 
 # Currency Logic
 if currency == "INR (₹)":
-    EXCHANGE_RATE = 87.0  # Approx Rate
+    EXCHANGE_RATE = 91.69  # Approx Rate
     SYMBOL = "₹"
     # Create a display column for filtering/plotting
     df_raw['Price_Display'] = df_raw['Price_USD'] * EXCHANGE_RATE
@@ -260,6 +260,7 @@ if not filtered_df.empty:
         width='stretch',
         height=500 if show_all else "content"
     )
+
 
 
 
